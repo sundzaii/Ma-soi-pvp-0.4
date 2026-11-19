@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#171923">
+<title>Ma Sói PvP 0.3</title>
+<style>
+:root{color-scheme:dark;--bg:#11131b;--panel:#1d2130;--line:#343a50;--text:#f4f5fb;--muted:#aeb5ca;--gold:#ffd166;--blue:#6ecbff;--red:#ff7777;--green:#8ee3a1}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#191d2b,#101119 65%);color:var(--text);font:16px system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+main{max-width:620px;margin:auto;padding:18px 14px 34px}.top{text-align:center;padding:12px 0 18px}
+h1{margin:0;font-size:29px;letter-spacing:.4px}.sub{color:var(--muted);font-size:13px;margin-top:5px}
+.panel{background:rgba(29,33,48,.96);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 8px 28px #0003}
+h2{font-size:18px;margin:0 0 12px}.muted{color:var(--muted)}.small{font-size:13px;color:var(--muted)}
+.row{display:flex;gap:10px}.row>*{flex:1;min-width:0}
+button{border:0;border-radius:12px;padding:13px 14px;background:#39425e;color:white;font-weight:700;font-size:15px;cursor:pointer}
+button:disabled{opacity:.4;cursor:not-allowed}.primary{background:linear-gradient(135deg,#5b7cff,#7659d6)}.gold{background:#8a6823;color:#fff2c7}.danger{background:#793d4a}.soft{background:#2b3042}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.char{border:2px solid var(--line);border-radius:15px;padding:14px 10px;text-align:center;background:#171b28}
+.emoji{font-size:34px}.char b{display:block;font-size:17px;margin:4px 0}
+.stats{font-size:13px;color:var(--muted)}.hidden{display:none!important}
+.center{text-align:center}.big{font-size:24px;font-weight:800}.hpbar{height:9px;border-radius:20px;background:#34394b;overflow:hidden;margin-top:7px}.hpfill{height:100%;background:linear-gradient(90deg,#62d68b,#b5e879);transition:width .2s}
+.fighter{background:#171b28;border:1px solid var(--line);border-radius:14px;padding:12px}
+.fighter.active{border-color:var(--gold);box-shadow:0 0 0 1px #ffd16655}.fighter.dead{opacity:.45}
+.log{max-height:190px;overflow:auto;font-size:13px;color:#d4d9e8;line-height:1.5}.log div{padding:5px 0;border-bottom:1px solid #ffffff0c}
+.pill{display:inline-block;padding:4px 9px;border-radius:20px;background:#30374d;color:#dce3ff;font-size:12px}
+.notice{padding:11px;border-radius:12px;background:#292f43;color:#e3e8fa;margin:10px 0;font-size:14px}
+input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#111521;color:white}
+.skill-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.skill{background:#20283a;border:1px solid #46516d;border-radius:12px;padding:10px;text-align:left;min-width:0}
+.skill b{display:block;font-size:14px;margin-bottom:4px}
+.skill .small{font-size:11px;line-height:1.35}
+.skill button{width:100%;margin-top:8px;padding:9px 7px;font-size:12px;background:#3d5c91}
+.skill.empty{border-style:dashed;opacity:.65}
+.status{display:inline-block;padding:3px 7px;border-radius:20px;background:#30374d;color:#dce3ff;font-size:11px;margin-top:5px}
+.status.ready{background:#174b38;color:#a8f0c4}.status.cooling{background:#5b3c27;color:#ffdb9b}
+.deck{border:2px dashed #64729a;border-radius:16px;padding:17px;text-align:center;background:linear-gradient(145deg,#252d45,#171b2a);margin:10px 0}
+.deck .cardback{font-size:48px}.deck b{display:block;margin:5px 0}
+footer{text-align:center;color:#7f879d;font-size:12px;margin-top:20px}
+@media(max-width:380px){.row{gap:7px}.panel{padding:13px}.skill-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<main>
+<header class="top"><h1>🐺 MA SÓI PvP</h1><div class="sub">BẢN 0.3 · Hai người · Một điện thoại</div></header>
+
+<section id="setup" class="panel">
+ <h2>🃏 Bộ bài nhân vật</h2>
+ <div id="setupStep" class="notice">Bộ bài có 3 nhân vật. Người chơi 1 bóc lá trên cùng trước, sau đó chuyển điện thoại cho người chơi 2.</div>
+ <div class="deck"><div class="cardback">🂠</div><b id="charDeckCount">3 lá trong bộ bài</b><div class="small">Bóc lá trên cùng hoặc xào lại trước khi bóc.</div></div>
+ <div class="row">
+  <button class="primary" id="drawChar" onclick="drawCharacter()">🃏 Bóc bài trên cùng</button>
+  <button class="soft" id="shuffleChar" onclick="shuffleCharacters()">🔀 Xào lại</button>
+ </div>
+ <div id="charDrawn" class="notice hidden"></div>
+ <button id="confirmChar" class="gold hidden" style="width:100%;margin-top:10px" onclick="confirmCharacter()">Xác nhận lá bài</button>
+ <button id="reveal" class="primary hidden" style="width:100%;margin-top:10px" onclick="revealChoices()">Lật bài – bắt đầu trận!</button>
+ <div class="small" style="margin-top:10px">Mỗi lá nhân vật chỉ có một bản trong bộ bài; hai người không thể bóc trùng nhân vật.</div>
+</section>
+
+<section id="battle" class="hidden">
+ <div class="panel center"><div class="small">KẾT QUẢ BÓC NHÂN VẬT</div><div class="row" style="margin-top:12px"><div class="fighter" id="p1card"></div><div class="fighter" id="p2card"></div></div></div>
+ <div class="panel">
+  <h2>✊ Oẳn tù tì – mỗi lượt</h2>
+  <div id="rpsPrompt" class="notice">Người chơi 1: chọn Kéo, Búa hoặc Bao. Sau đó chuyển điện thoại cho người chơi 2.</div>
+  <div class="row" id="rpsButtons">
+   <button onclick="pickRps('keo')">✌️ Kéo</button><button onclick="pickRps('bua')">✊ Búa</button><button onclick="pickRps('bao')">✋ Bao</button>
+  </div>
+  <div id="rpsDone" class="notice hidden"></div>
+  <div id="turnInfo" class="notice hidden"></div>
+  <div class="row"><div class="fighter" id="hp1"></div><div class="fighter" id="hp2"></div></div>
+  <div class="row" id="skillPanels" style="margin-top:10px"><div class="fighter" id="skills1"></div><div class="fighter" id="skills2"></div></div>
+  <div class="notice small">🎴 Khi hạ gục đối thủ, người hạ gục được bóc 1 kỹ năng. Nếu sau 3 lượt đánh liên tiếp chưa có ai bị hạ gục, người đang tới lượt được bóc 1 lá. Kỹ năng nằm trong bộ bài chung, phe nào cũng dùng được.</div>
+  <button id="attack" class="primary hidden" style="width:100%;margin-top:4px" onclick="attack()">⚔️ Tấn công</button>
+  <button class="soft" style="width:100%;margin-top:9px" onclick="resetGame()">Chơi ván mới</button>
+ </div>
+ <div class="panel"><h2>📜 Nhật ký trận đấu</h2><div id="log" class="log"></div></div>
+</section>
+
+<section id="skillDraw" class="panel center hidden">
+ <h2>🎴 Bốc kỹ năng</h2><div id="skillDrawPrompt" class="notice"></div>
+ <div class="deck"><div class="cardback">✨</div><b id="skillDeckCount">Bộ bài kỹ năng</b><div class="small">Có thể xào lại bộ bài trước khi bóc.</div></div>
+ <div class="row"><button class="primary" id="drawSkill" onclick="drawSkill()">🃏 Bóc lá trên cùng</button><button class="soft" id="shuffleSkill" onclick="shuffleSkills()">🔀 Xào lại</button></div>
+ <div id="skillReveal" class="notice hidden"></div>
+ <div id="witchChoices" class="row hidden" style="margin-top:8px"><button class="gold" onclick="useWitch('damage')">⚔️ Tăng 30% sát thương</button><button class="primary" onclick="useWitch('heal')">❤️ Hồi 50% HP</button></div>
+ <button id="finishSkill" class="primary hidden" style="width:100%;margin-top:10px" onclick="finishSkillDraw()">Hoàn tất</button>
+</section>
+
+<section id="result" class="panel center hidden"><div style="font-size:42px">🏆</div><h2 id="winner"></h2><p id="resultText" class="muted"></p><button class="primary" style="width:100%" onclick="resetGame()">Chơi lại</button></section>
+<footer>Ma Sói PvP 0.3 · Bài nhân vật ngẫu nhiên · Kỹ năng dùng chung · Oẳn tù tì mỗi lượt</footer>
+</main>
+<script>
+const chars={
+ dan:{name:'Dân làng',emoji:'🧑',hp:7,dmg:3},
+ soi:{name:'Sói',emoji:'🐺',hp:10,dmg:2},
+ vampire:{name:'Ma Cà Rồng',emoji:'🧛',hp:6,dmg:4}
+};
+const skillInfo={
+ protect:{name:'Bảo vệ',emoji:'🛡️',desc:'Chặn toàn bộ sát thương từ đòn tấn công kế tiếp. Dùng một lần.'},
+ hunter:{name:'Thợ săn',emoji:'🏹',desc:'Tăng vĩnh viễn 1 sát thương.'},
+ lone:{name:'Sói cô đơn',emoji:'🐺',desc:'Tăng 20% HP tối đa và 20% sát thương. Chỉ số lẻ làm tròn lên.'},
+ witch:{name:'Sói phù thủy',emoji:'🧙',desc:'Chọn tăng 30% sát thương cho đòn kế tiếp hoặc hồi ngay 50% HP tối đa.'}
+};
+let charDeck=[],picks=[null,null],pendingChar=null,picker=0;
+let rps=[null,null],rpsPicker=0,fighters=[],turn=0,over=false,turnNumber=0,turnsSinceDraw=0;
+let skillDeck=[],skillOwner=null,drawnSkill=null,skillPending=false;
+const $=id=>document.getElementById(id);
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function initDecks(){charDeck=shuffle(['dan','soi','vampire']);skillDeck=shuffle(['protect','protect','hunter','hunter','lone','lone','witch','witch']);}
+function updateCharDeck(){$('charDeckCount').textContent=`${charDeck.length} lá còn lại trong bộ bài`;$('drawChar').disabled=charDeck.length===0||!!pendingChar;$('shuffleChar').disabled=!!pendingChar||charDeck.length===0;}
+function drawCharacter(){
+ if(pendingChar||charDeck.length===0)return;
+ pendingChar=charDeck.pop();$('charDrawn').classList.remove('hidden');
+ $('charDrawn').innerHTML=`Người chơi ${picker+1} đã bóc được một lá bài úp. Nhấn xác nhận để giữ lá bài.`;
+ $('confirmChar').classList.remove('hidden');updateCharDeck();
+}
+function shuffleCharacters(){if(pendingChar)return;shuffle(charDeck);logSetup('Bộ bài nhân vật đã được xào lại.');updateCharDeck();$('setupStep').textContent='Đã xào bài! Người chơi hiện tại có thể bóc lá trên cùng.';}
+function logSetup(s){$('setupStep').textContent=s;}
+function confirmCharacter(){
+ if(!pendingChar)return;picks[picker]=pendingChar;pendingChar=null;
+ $('charDrawn').classList.add('hidden');$('confirmChar').classList.add('hidden');
+ if(picker===0){picker=1;$('setupStep').textContent='Người chơi 1 đã giữ lá bài. Chuyển điện thoại cho người chơi 2 bóc lá trên cùng.';updateCharDeck();}
+ else{$('setupStep').textContent='Cả hai đã bóc xong. Nhấn lật bài để bắt đầu trận.';$('drawChar').classList.add('hidden');$('shuffleChar').classList.add('hidden');$('reveal').classList.remove('hidden');}
+}
+function revealChoices(){
+ $('setup').classList.add('hidden');$('battle').classList.remove('hidden');
+ fighters=picks.map((k,i)=>({key:k,...chars[k],hp:chars[k].hp,max:chars[k].hp,label:`Người chơi ${i+1}`,protected:false,bonusDamage:0,skills:[]}));
+ $('p1card').innerHTML=cardFace(fighters[0]);$('p2card').innerHTML=cardFace(fighters[1]);
+ initDecksForSkills();log('Hai người chơi đã lật nhân vật. Mỗi lượt đều oẳn tù tì để quyết định ai tấn công trước.');
+ updateHp();updateSkills();startRps();
+}
+function initDecksForSkills(){skillDeck=shuffle(['protect','protect','hunter','hunter','lone','lone','witch','witch']);}
+function cardFace(f){return `<div class="emoji">${f.emoji}</div><b>${f.name}</b><div class="stats">❤️ ${f.max} HP · ⚔️ ${f.dmg} sát thương</div>`}
+function startRps(){
+ rps=[null,null];rpsPicker=0;$('rpsPrompt').classList.remove('hidden');$('rpsPrompt').textContent=`Người chơi ${turn+1}: chọn Kéo, Búa hoặc Bao. Sau đó chuyển điện thoại cho người chơi còn lại.`;
+ $('rpsButtons').classList.remove('hidden');$('rpsDone').classList.add('hidden');$('attack').classList.add('hidden');
+ ['keo','bua','bao'].forEach((v,i)=>$('rpsButtons').children[i].onclick=()=>pickRps(v));
+}
+function pickRps(v){
+ rps[rpsPicker]=v;
+ if(rpsPicker===0){rpsPicker=1;$('rpsPrompt').textContent=`Người chơi ${turn+1} đã chọn. Chuyển điện thoại cho người chơi còn lại.`;$('rpsButtons').classList.add('hidden');$('rpsDone').classList.remove('hidden');$('rpsDone').textContent='Đang chờ người chơi còn lại...';
+ let wrap=document.createElement('div');wrap.className='row';wrap.id='rpsButtons2';
+ ['keo','bua','bao'].forEach((x,i)=>{let b=document.createElement('button');b.textContent=['✌️ Kéo','✊ Búa','✋ Bao'][i];b.onclick=()=>pickRps(x);wrap.appendChild(b)});$('rpsButtons').after(wrap);
+ }else{
+ $('rpsButtons2')?.remove();const names={keo:'✌️ Kéo',bua:'✊ Búa',bao:'✋ Bao'};
+ $('rpsDone').textContent=`P${turn+1}: ${names[rps[0]]} · P${2-turn}: ${names[rps[1]]}`;
+ if(rps[0]===rps[1]){rps=[null,null];rpsPicker=0;$('rpsPrompt').textContent='Hòa rồi! Chơi lại oẳn tù tì.';$('rpsButtons').classList.remove('hidden');$('rpsDone').classList.add('hidden');return;}
+ const win=({keo:'bao',bua:'keo',bao:'bua'})[rps[0]]===rps[1]?turn:1-turn;
+ turn=win;$('rpsButtons').classList.add('hidden');$('rpsPrompt').classList.add('hidden');
+ $('rpsDone').classList.remove('hidden');$('rpsDone').textContent=`Người chơi ${win+1} thắng oẳn tù tì và được đánh trước lượt này.`;
+ $('turnInfo').classList.remove('hidden');$('turnInfo').textContent=`Đến lượt ${fighters[turn].label} (${fighters[turn].name}).`;
+ $('attack').classList.remove('hidden');$('attack').disabled=false;updateHp();updateSkills();log(`Người chơi ${win+1} thắng oẳn tù tì và được đánh lượt này.`);
+ }
+}
+function updateSkills(){
+ fighters.forEach((f,i)=>{
+  const el=$('skills'+(i+1));if(!f){el.innerHTML='';return;}
+  const owned=f.skills.length?f.skills.map(s=>`<div class="skill"><b>${skillInfo[s].emoji} ${skillInfo[s].name}</b><div class="small">${skillInfo[s].desc}</div><span class="status ready">${s==='hunter'||s==='lone'?'Vĩnh viễn':'Đã nhận'}</span></div>`).join(''):'<div class="small">Chưa có kỹ năng. Có thể nhận khi hạ gục đối thủ hoặc đủ 3 lượt đánh.</div>';
+  el.innerHTML=`<b>🎴 Kỹ năng · ${f.label}</b><div class="skill-grid">${owned}</div>`;
+ });
+}
+function updateHp(){
+ fighters.forEach((f,i)=>{
+  const el=$('hp'+(i+1));el.classList.toggle('active',turn===i&&!over);el.classList.toggle('dead',f.hp<=0);
+  el.innerHTML=`<b>${f.label} · ${f.name}</b><div style="font-size:22px;margin-top:5px">❤️ ${f.hp}/${f.max}</div><div class="hpbar"><div class="hpfill" style="width:${Math.max(0,f.hp/f.max*100)}%"></div></div><div class="small" style="margin-top:7px">Sát thương: ${f.dmg}${f.protected?' · 🛡️ Có Bảo vệ':''}${f.bonusDamage?' · ⚡ +'+f.bonusDamage+' đòn kế':''}</div>`;
+ });
+}
+function attack(){
+ if(over||!$('attack').classList.contains('hidden')===false)return;
+ const a=fighters[turn],d=fighters[1-turn];if(!a||!d||d.hp<=0)return;
+ const damage=a.dmg+a.bonusDamage;a.bonusDamage=0;
+ if(d.protected){d.protected=false;log(`${a.label} tấn công ${d.label}, nhưng Bảo vệ đã chặn toàn bộ sát thương!`);}
+ else{d.hp=Math.max(0,d.hp-damage);log(`${a.label} (${a.name}) tấn công ${d.label}, gây ${damage} sát thương. ${d.label} còn ${d.hp}/${d.max} HP.`);}
+ turnNumber++;turnsSinceDraw++;
+ updateHp();updateSkills();
+ if(d.hp===0){over=true;$('attack').disabled=true;$('result').classList.remove('hidden');$('winner').textContent=`${a.label} chiến thắng!`;$('resultText').textContent=`${a.name} đã hạ gục ${d.name}.`;$('attack').classList.add('hidden');log(`${a.label} chiến thắng trận đấu!`);openSkillDraw(turn);return;}
+ turn=1-turn;updateHp();updateSkills();
+ if(turnsSinceDraw>=3){turnsSinceDraw=0;openSkillDraw(turn);return;}
+ startRps();
+}
+function openSkillDraw(owner){skillOwner=owner;drawnSkill=null;skillPending=true;$('battle').classList.add('hidden');$('skillDraw').classList.remove('hidden');$('skillDrawPrompt').textContent=`Người chơi ${owner+1} được quyền bóc 1 lá kỹ năng. Chuyển điện thoại cho người chơi này.`;$('skillDeckCount').textContent=`${skillDeck.length} lá kỹ năng còn lại`;$('drawSkill').disabled=skillDeck.length===0;$('skillReveal').classList.add('hidden');$('witchChoices').classList.add('hidden');$('finishSkill').classList.toggle('hidden',skillDeck.length!==0);$('finishSkill').textContent=skillDeck.length===0?'Bộ bài hết – tiếp tục':'Hoàn tất';}
+function shuffleSkills(){if(drawnSkill)return;shuffle(skillDeck);$('skillDeckCount').textContent=`${skillDeck.length} lá kỹ năng còn lại · Đã xào`;}
+function drawSkill(){
+ if(drawnSkill||skillDeck.length===0)return;drawnSkill=skillDeck.pop();const f=fighters[skillOwner],s=drawnSkill;
+ $('skillReveal').classList.remove('hidden');$('skillReveal').innerHTML=`<div style="font-size:38px">${skillInfo[s].emoji}</div><b>${skillInfo[s].name}</b><div class="small">${skillInfo[s].desc}</div>`;
+ $('drawSkill').disabled=true;$('shuffleSkill').disabled=true;
+ if(s==='witch'){$('witchChoices').classList.remove('hidden');}
+ else{applySkill(s,skillOwner);$('finishSkill').classList.remove('hidden');}
+ $('skillDeckCount').textContent=`${skillDeck.length} lá kỹ năng còn lại`;if(skillDeck.length===0){$('finishSkill').classList.remove('hidden');$('finishSkill').textContent='Bộ bài hết – tiếp tục';}
+}
+function applySkill(s,i){
+ const f=fighters[i];f.skills.push(s);
+ if(s==='protect'){f.protected=true;log(`${f.label} nhận Bảo vệ: chặn toàn bộ đòn tấn công kế tiếp.`);}
+ if(s==='hunter'){f.dmg+=1;log(`${f.label} nhận Thợ săn: sát thương vĩnh viễn +1.`);}
+ if(s==='lone'){f.max=Math.ceil(f.max*1.2);f.hp=Math.min(f.max,Math.ceil(f.hp*1.2));f.dmg=Math.ceil(f.dmg*1.2);log(`${f.label} nhận Sói cô đơn: HP tối đa và sát thương tăng 20% (làm tròn lên).`);}
+ updateHp();updateSkills();
+}
+function useWitch(choice){
+ const f=fighters[skillOwner];f.skills.push('witch');
+ if(choice==='damage'){f.bonusDamage=Math.ceil(f.dmg*0.3);log(`${f.label} dùng Sói phù thủy: đòn tấn công kế tiếp được cộng ${f.bonusDamage} sát thương (30%, làm tròn lên).`);}
+ else{const heal=Math.ceil(f.max*0.5);const before=f.hp;f.hp=Math.min(f.max,f.hp+heal);log(`${f.label} dùng Sói phù thủy: hồi ${f.hp-before} HP.`);}
+ $('witchChoices').classList.add('hidden');$('finishSkill').classList.remove('hidden');updateHp();updateSkills();
+}
+function finishSkillDraw(){
+ $('skillDraw').classList.add('hidden');$('battle').classList.remove('hidden');skillPending=false;updateHp();updateSkills();
+ if(over){$('result').classList.remove('hidden');return;}
+ startRps();
+}
+function resetGame(){
+ picks=[null,null];pendingChar=null;picker=0;rps=[null,null];rpsPicker=0;fighters=[];turn=0;over=false;turnNumber=0;turnsSinceDraw=0;skillOwner=null;drawnSkill=null;skillPending=false;initDecks();
+ $('setup').classList.remove('hidden');$('battle').classList.add('hidden');$('skillDraw').classList.add('hidden');$('result').classList.add('hidden');
+ $('setupStep').textContent='Bộ bài có 3 nhân vật. Người chơi 1 bóc lá trên cùng trước, sau đó chuyển điện thoại cho người chơi 2.';
+ $('charDrawn').classList.add('hidden');$('confirmChar').classList.add('hidden');$('reveal').classList.add('hidden');$('drawChar').classList.remove('hidden');$('shuffleChar').classList.remove('hidden');$('drawChar').disabled=false;$('shuffleChar').disabled=false;$('log').innerHTML='';$('rpsButtons2')?.remove();updateCharDeck();
+}
+initDecks();updateCharDeck();
+</script>
+</body></html>
